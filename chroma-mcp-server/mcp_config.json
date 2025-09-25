@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "chroma-mcp": {
+      "command": "python3",
+      "args": ["/Users/locusnetwork/Desktop/Locus/chroma-mcp-server/mcp_chroma_server.py"],
+      "env": {
+        "CHROMA_PERSIST_DIR": "/Users/locusnetwork/Desktop/Locus/chroma-mcp-server/chroma_db",
+        "CHROMA_HOST": "localhost",
+        "CHROMA_PORT": "8000",
+        "CHROMA_COLLECTION": "default_collection"
+      }
+    }
+  }
+}

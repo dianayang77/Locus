@@ -7,7 +7,7 @@ struct IntroView: View {
     @State private var parametersOpacity = 0.0
     @State private var isAuthenticating = false
     @State private var showingJoin = false
-    @State private var showingLogin = false
+    @State private var showingEmailLogin = false
     
     var body: some View {
         ZStack {
@@ -58,7 +58,7 @@ struct IntroView: View {
                     }
                     .opacity(parametersOpacity)
                     
-                    Button(action: { showingLogin = true }) {
+                    Button(action: { showingEmailLogin = true }) {
                         Text("or log back in")
                             .font(.custom("JetBrainsMono-Medium", size: 15))
                             .foregroundColor(Color(red: 0.23, green: 0.21, blue: 0.21)) // #3a3636
@@ -88,8 +88,9 @@ struct IntroView: View {
         .fullScreenCover(isPresented: $showingJoin) {
             JoinView()
         }
-        .sheet(isPresented: $showingLogin) {
-            LoginView()
+        .sheet(isPresented: $showingEmailLogin) {
+            EmailLoginView()
+                .preferredColorScheme(.dark)
         }
     }
     

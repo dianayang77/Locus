@@ -12,6 +12,14 @@
 				<string>com.googleusercontent.apps.288510512481-vfio6cjnar829mpqhco7q7bbmsnqhaei</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>msauth.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
 	</array>
 	<key>GIDClientID</key>
 	<string>288510512481-vfio6cjnar829mpqhco7q7bbmsnqhaei.apps.googleusercontent.com</string>

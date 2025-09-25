@@ -15,25 +15,33 @@ final class AppleAuthManager: NSObject {
     private var errorHandler: ((Error) -> Void)?
 
     func signIn(completion: @escaping (Result) -> Void, onError: @escaping (Error) -> Void) {
+        print("🍎 AppleAuthManager: signIn called")
         self.completion = completion
         self.errorHandler = onError
 
         let provider = ASAuthorizationAppleIDProvider()
         let request = provider.createRequest()
         request.requestedScopes = [.fullName, .email]
+        print("🍎 AppleAuthManager: Created authorization request")
 
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
+        print("🍎 AppleAuthManager: About to perform requests")
         controller.performRequests()
     }
 }
 
 extension AppleAuthManager: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
+        print("🍎 AppleAuthManager: Authorization completed successfully")
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else { 
+            print("🍎 AppleAuthManager: Failed to get Apple ID credential")
+            return 
+        }
 
         let userId = credential.user
+        print("🍎 AppleAuthManager: User ID: \(userId)")
         KeychainHelper.standard.set(userId, key: "appleUserIdentifier")
 
         let token = credential.identityToken.flatMap { String(data: $0, encoding: .utf8) }
@@ -46,10 +54,13 @@ extension AppleAuthManager: ASAuthorizationControllerDelegate {
             identityToken: token,
             authorizationCode: code
         )
+        print("🍎 AppleAuthManager: Calling completion handler")
         completion?(result)
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("🍎 AppleAuthManager: Authorization failed with error: \(error.localizedDescription)")
+        print("🍎 AppleAuthManager: Error details: \(error)")
         errorHandler?(error)
     }
 }

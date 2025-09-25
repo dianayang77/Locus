@@ -4,7 +4,9 @@ import UIKit
 struct JoinView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingJoinEmail: Bool = false
+    @State private var showingSetupProfile: Bool = false
     @State private var alertMessage: String? = nil
+    @State private var appleAuthManager: AppleAuthManager? = nil
     
     var body: some View {
         ZStack {
@@ -33,61 +35,67 @@ struct JoinView: View {
                 // Subtitle
                 Text("hey, glad to have you ... choose your path:")
                     .font(.custom("JetBrainsMono-Medium", size: 12))
-                    .foregroundColor(.white.opacity(0.7))
-                    .padding(.top, 50)
-                    .padding(.bottom, 5)
+                    .foregroundColor(.white)
+                    .padding(.top, 40)
+                    .padding(.bottom, 20)
                     .padding(.horizontal, 20)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Spacer().frame(height: 18)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 // Options
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
                     authButton(title: "Join with Apple", iconImage: Image("apple_logo")) {
-                        let manager = AppleAuthManager()
-                        manager.signIn { result in
-                            alertMessage = "Signed in as: \(result.userIdentifier)"
+                        print("🍎 Apple Sign In button tapped")
+                        appleAuthManager = AppleAuthManager()
+                        appleAuthManager?.signIn { result in
+                            print("🍎 Apple Sign In success: \(result.userIdentifier)")
+                            DispatchQueue.main.async {
+                                showingSetupProfile = true
+                                print("🍎 showingSetupProfile set to true")
+                            }
                         } onError: { error in
+                            print("🍎 Apple Sign In error: \(error.localizedDescription)")
                             alertMessage = "Apple sign-in failed: \(error.localizedDescription)"
                         }
                     }
-                        .padding(.top, 10)
-                        .padding(.bottom, 8)
+                    
                     authButton(title: "Join with Google", iconImage: Image("google_logo")) {
+                        print("🔵 Google Sign In button tapped")
                         let manager = GoogleAuthManager()
                         let window = UIApplication.shared.connectedScenes
                             .compactMap { $0 as? UIWindowScene }
                             .first?.windows.first { $0.isKeyWindow }
                         manager.signIn(presentingWindow: window) { result in
-                            alertMessage = "Google user: \(result.email ?? result.userId)"
+                            print("🔵 Google Sign In success: \(result.email ?? result.userId)")
+                            DispatchQueue.main.async {
+                                showingSetupProfile = true
+                                print("🔵 showingSetupProfile set to true")
+                            }
                         } onError: { error in
+                            print("🔵 Google Sign In error: \(error.localizedDescription)")
                             alertMessage = "Google sign-in failed: \(error.localizedDescription)"
                         }
                     }
-                        .padding(.bottom, 8)
-                    authButton(title: "Join with Outlook", iconImage: Image("outlook_logo")) { /* TODO: Outlook */ }
-                        .padding(.bottom, 8)
+                    
+                    authButton(title: "Join with Email", iconSystem: "person.fill") { showingJoinEmail = true }
                     
                     DividerLineDots()
-                        .padding(.vertical, 4)
-                    
-                    authButton(title: "Join with Email", iconImage: Image("email_logo")) { showingJoinEmail = true }
+                        .padding(.top, 16)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 
-                // Back button (moved up under email)
+                // Back button
                 Button(action: { dismiss() }) {
                     HStack {
                         Image(systemName: "arrow.left")
-                        Text("back")
+                        Text("Back")
                             .font(.custom("JetBrainsMono-Medium", size: 13))
                     }
                     .foregroundColor(.white.opacity(0.8))
                     .frame(width: 150, height: 36)
                     .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.10, green: 0.10, blue: 0.10)))
                 }
-                .padding(.top, 40)
+                .padding(.top, 24)
                 
                 Spacer(minLength: 12)
                 
@@ -108,6 +116,26 @@ struct JoinView: View {
         .sheet(isPresented: $showingJoinEmail) {
             EmailJoinView()
                 .preferredColorScheme(.dark)
+        }
+        .fullScreenCover(isPresented: $showingSetupProfile) {
+            SetupProfileView(
+                username: .constant(""),
+                university: .constant(""),
+                occupation: .constant(""),
+                currentCity: .constant(""),
+                frequentedCity: .constant(""),
+                onBack: {
+                    showingSetupProfile = false
+                },
+                onContinue: {
+                    // TODO: Handle profile setup completion
+                    showingSetupProfile = false
+                }
+            )
+            .preferredColorScheme(.dark)
+            .onAppear {
+                print("🍎 SetupProfileView appeared")
+            }
         }
         .alert(item: Binding(
             get: {

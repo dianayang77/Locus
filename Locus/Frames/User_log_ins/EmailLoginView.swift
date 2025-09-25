@@ -3,12 +3,16 @@ import UIKit
 
 struct EmailLoginView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var email: String = ""
+    @State private var username: String = ""
     @State private var password: String = ""
+    @State private var isKeyboardVisible = false
     
     var body: some View {
-        ZStack { Color.black.ignoresSafeArea() }
-            .overlay(content)
+        ZStack {
+            GridBackground()
+                .ignoresSafeArea()
+            content
+        }
     }
     
     @ViewBuilder
@@ -16,11 +20,11 @@ struct EmailLoginView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Log in with email")
+                Text("Log in with Username")
                     .font(.custom("JetBrainsMono-ExtraBold", size: 18))
                     .foregroundColor(.white)
                 Spacer()
-                Text("⟨x,y,z⟩ → ∞")
+                Text("(x,y,z) → ∞")
                     .font(.custom("JetBrainsMono-Regular", size: 10))
                     .foregroundColor(Color(red: 0.34, green: 0.34, blue: 0.34))
             }
@@ -38,19 +42,18 @@ struct EmailLoginView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 40)
             
-            // Email field
+            // Username field
             VStack(alignment: .leading, spacing: 8) {
-                Text("Enter email:")
+                Text("Enter username:")
                     .font(.custom("JetBrainsMono-Medium", size: 13))
                     .foregroundColor(.white)
-                TextField("name@domain.com", text: $email)
+                TextField("username", text: $username)
                     .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
                     .disableAutocorrection(true)
                     .padding(.horizontal, 10)
-                    .frame(height: 32)
+                    .frame(height: 25)
                     .background(RoundedRectangle(cornerRadius: 5).fill(Color(white: 1)))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .font(.custom("JetBrainsMono-Regular", size: 12))
             }
             .padding(.horizontal, 18)
@@ -65,11 +68,11 @@ struct EmailLoginView: View {
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .padding(.horizontal, 10)
-                    .frame(height: 32)
+                    .frame(height: 25)
                     .background(RoundedRectangle(cornerRadius: 5).fill(Color(white: 1)))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .font(.custom("JetBrainsMono-Regular", size: 12))
-                Text("...forgot password")
+                Text("forgot password")
                     .font(.custom("JetBrainsMono-Medium", size: 10))
                     .foregroundColor(.white.opacity(0.8))
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -92,7 +95,7 @@ struct EmailLoginView: View {
                     .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.10, green: 0.10, blue: 0.10)))
                 }
                 
-                Button(action: { /* TODO: handle email login */ }) {
+                Button(action: { /* TODO: handle username login */ }) {
                     HStack {
                         Text("continue")
                             .font(.custom("JetBrainsMono-Medium", size: 12))
@@ -104,21 +107,33 @@ struct EmailLoginView: View {
                 }
             }
             .padding(.top, 12)
-            
-            Spacer(minLength: 40)
-            
-            // Footer
-            HStack {
-                AppMarkImage()
-                    .frame(width: 60, height: 55)
-                    .opacity(0.5)
-                Spacer()
-                Text("© 2025 Locus Network LLC. All rights reserved.")
-                    .font(.custom("JetBrainsMono-Regular", size: 10))
-                    .foregroundColor(Color(red: 0.77, green: 0.76, blue: 0.76).opacity(0.8))
+        }
+        .safeAreaInset(edge: .bottom) {
+            // Footer that hides when keyboard is visible
+            if !isKeyboardVisible {
+                HStack {
+                    AppMarkImage()
+                        .frame(width: 60, height: 55)
+                        .opacity(0.5)
+                    Spacer()
+                    Text("© 2025 Locus Network LLC. All rights reserved.")
+                        .font(.custom("JetBrainsMono-Regular", size: 10))
+                        .foregroundColor(Color(red: 0.77, green: 0.76, blue: 0.76).opacity(0.8))
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 12)
+                .background(Color.black)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = true
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = false
+            }
         }
     }
     

@@ -13,6 +13,7 @@ struct SetupProfileView: View {
     var onContinue: (() -> Void)?
 
     @State private var showValidation = false
+    @State private var isKeyboardVisible = false
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -29,18 +30,18 @@ struct SetupProfileView: View {
                         .padding(.top, 10)
 
                     VStack(alignment: .leading, spacing: 36) {
-                        LocusField(label: "Create username:", placeholder: "e.g. dianayang", text: $username, height: 19)
+                        LocusField(label: "Create username: *", placeholder: "", text: $username, height: 22)
                             .frame(width: 268)
                             .padding(.top, 20)
-                        LocusField(label: "College/University:", placeholder: "MIT", text: $university, height: 19)
+                        LocusField(label: "College/University: *", placeholder: "", text: $university, height: 22)
                             .padding(.bottom, 1)
                             .frame(width: 268)
-                        LocusField(label: "Occupation/Work:", placeholder: "Quantitative Researcher", text: $occupation, height: 19)
+                        LocusField(label: "Occupation/Work: (optional)", placeholder: "", text: $occupation, height: 22)
                             .frame(width: 268)
                         HStack(spacing: 12) {
-                            LocusField(label: "Current city:", placeholder: "New York", text: $currentCity, height: 19)
+                            LocusField(label: "Current city: *", placeholder: "", text: $currentCity, height: 22)
                                 .frame(width: 143)
-                            LocusField(label: "Frequented city:", placeholder: "San Francisco", text: $frequentedCity, height: 19)
+                            LocusField(label: "Frequented city: *", placeholder: "", text: $frequentedCity, height: 22)
                                 .frame(width: 143)
                         }
                     }
@@ -80,21 +81,34 @@ struct SetupProfileView: View {
                 .frame(minHeight: 874, alignment: .topLeading)
             }
             .safeAreaInset(edge: .bottom) {
-                HStack(spacing: 12) {
-                    AppMarkImageView()
-                        .frame(width: 60, height: 55)
-                        .opacity(0.5)
-                    Text("© 2025 Locus Network LLC. All rights reserved.")
-                        .font(.custom("JetBrainsMono-Medium", size: 10))
-                        .foregroundColor(Color(hex: "#c5c1c1").opacity(0.8))
+                // Footer that hides when keyboard is visible
+                if !isKeyboardVisible {
+                    HStack(spacing: 12) {
+                        AppMarkImageView()
+                            .frame(width: 60, height: 55)
+                            .opacity(0.5)
+                        Text("© 2025 Locus Network LLC. All rights reserved.")
+                            .font(.custom("JetBrainsMono-Medium", size: 10))
+                            .foregroundColor(Color(hex: "#c5c1c1").opacity(0.8))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.bottom, 8)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 8)
             }
 
             // removed separate bottom-left app icon to keep footer centered as a group
         }
         .background(Color.black)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = true
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = false
+            }
+        }
     }
 
     private var header: some View {
@@ -128,8 +142,9 @@ struct SetupProfileView: View {
 
     private func isValid() -> Bool {
         !username.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !occupation.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !currentCity.trimmingCharacters(in: .whitespaces).isEmpty
+        !university.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !currentCity.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !frequentedCity.trimmingCharacters(in: .whitespaces).isEmpty
     }
 }
 

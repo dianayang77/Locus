@@ -15,6 +15,24 @@ struct EmailJoinView: View {
     @State private var fpCurrentCity: String = ""
     @State private var fpFrequentedCity: String = ""
     
+    // Focus state for keyboard management
+    @FocusState private var focusedField: Field?
+    @State private var isKeyboardVisible = false
+    
+    enum Field {
+        case email, age, fullName, password, confirmPassword
+    }
+    
+    // Computed property to check if all required fields are filled
+    private var isFormValid: Bool {
+        !email.isEmpty && 
+        !age.isEmpty && 
+        !fullName.isEmpty && 
+        !password.isEmpty && 
+        !confirmPassword.isEmpty &&
+        password == confirmPassword
+    }
+    
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -64,87 +82,126 @@ struct EmailJoinView: View {
                 .foregroundColor(.white.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
-                .padding(.top, 50)
+                .padding(.top, 36)
             
-            GeometryReader { geo in
-                let contentWidth = geo.size.width - 40 // 20pt side padding on each side
-                let columnSpacing: CGFloat = 32
-                let columnWidth = max(0, (contentWidth - columnSpacing) / 2)
-                let fullNameWidth = max(0, min(contentWidth, 360)) // make longer than one column
-                
-                ZStack(alignment: .top) {
-                    // Form content aligned to top
-                    VStack(spacing: 28) {
-                        // Row 1: Email | Age
-                        HStack(alignment: .top, spacing: columnSpacing) {
-                            labeledField(title: "Enter email:", text: $email, width: min(columnWidth, 110), height: 19)
-                                .frame(width: columnWidth, alignment: .leading)
-                            labeledField(title: "Enter age:", text: $age, width: min(columnWidth, 110), height: 19, keyboard: .numberPad)
-                                .frame(width: columnWidth, alignment: .trailing)
-                        }
-                        
-                        // Row 2: Full name spanning beyond left column
-                        HStack(alignment: .top, spacing: 0) {
-                            labeledField(title: "Enter full name:", text: $fullName, width: fullNameWidth, height: 19)
-                            Spacer()
-                        }
-                        
-                        // Row 3: Create | Confirm password
-                        HStack(alignment: .top, spacing: columnSpacing) {
-                            labeledSecure(title: "Create password:", text: $password, width: min(columnWidth, 130), height: 19)
-                                .frame(width: columnWidth, alignment: .leading)
-                            labeledSecure(title: "Confirm password:", text: $confirmPassword, width: min(columnWidth, 133), height: 19)
-                                .frame(width: columnWidth, alignment: .trailing)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .top)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 50)
+            VStack(spacing: 0) {
+                // Form content with proper keyboard avoidance
+                GeometryReader { geo in
+                    let contentWidth = geo.size.width - 40 // 20pt side padding on each side
+                    let columnSpacing: CGFloat = 32
+                    let columnWidth = max(0, (contentWidth - columnSpacing) / 2)
+                    let fullNameWidth = max(0, min(contentWidth, 360)) // make longer than one column
                     
-                    // Buttons positioned ~40% up from the bottom (at ~60% of height)
-                    VStack {
-                        HStack(spacing: 24) {
-                            Button(action: { dismiss() }) {
-                                HStack { Image(systemName: "arrow.left"); Text("back").font(.custom("JetBrainsMono-Regular", size: 13)) }
-                                    .foregroundColor(.white.opacity(0.85))
-                                    .frame(width: 150, height: 36)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.10, green: 0.10, blue: 0.10)))
+                    ScrollView {
+                        VStack(spacing: 28) {
+                            // Row 1: Email | Age
+                            HStack(alignment: .top, spacing: columnSpacing) {
+                                labeledField(title: "Enter email:", text: $email, width: min(columnWidth, 110), height: 25, field: .email)
+                                    .frame(width: columnWidth, alignment: .leading)
+                                labeledField(title: "Enter age:", text: $age, width: min(columnWidth, 110), height: 25, keyboard: .numberPad, field: .age)
+                                    .frame(width: columnWidth, alignment: .trailing)
                             }
-                            Button(action: { showingFinishProfile = true }) {
-                                HStack { Text("continue").font(.custom("JetBrainsMono-Medium", size: 12)); Image(systemName: "arrow.right") }
-                                    .foregroundColor(.black)
-                                    .frame(width: 150, height: 36)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.9)))
+                            
+                            // Row 2: Full name spanning beyond left column
+                            HStack(alignment: .top, spacing: 0) {
+                                labeledField(title: "Enter full name:", text: $fullName, width: fullNameWidth, height: 25, field: .fullName)
+                                Spacer()
+                            }
+                            
+                            // Row 3: Create | Confirm password
+                            HStack(alignment: .top, spacing: columnSpacing) {
+                                labeledSecure(title: "Create password:", text: $password, width: min(columnWidth, 130), height: 25, field: .password)
+                                    .frame(width: columnWidth, alignment: .leading)
+                                labeledSecure(title: "Confirm password:", text: $confirmPassword, width: min(columnWidth, 133), height: 25, field: .confirmPassword)
+                                    .frame(width: columnWidth, alignment: .trailing)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 50)
+                        .padding(.bottom, 200) // Extra bottom padding for keyboard
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .padding(.top, {
-                        let h = geo.size.height
-                        let value = h.isFinite && h > 0 ? h * 0.60 : 0
-                        return max(0, value)
-                    }())
+                    .scrollDismissesKeyboard(.interactively)
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .font(.custom("JetBrainsMono-Medium", size: 14))
+                        .foregroundColor(.white)
+                    }
+                }
+                
+                // Fixed bottom section with buttons
+                VStack(spacing: 12) {
+                    // Validation message - hide when keyboard is visible
+                    if !isFormValid && !isKeyboardVisible {
+                        Text("Please fill in all fields to continue")
+                            .font(.custom("JetBrainsMono-Medium", size: 11))
+                            .foregroundColor(.white.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    HStack(spacing: 24) {
+                        Button(action: { dismiss() }) {
+                            HStack { Image(systemName: "arrow.left"); Text("back").font(.custom("JetBrainsMono-Regular", size: 13)) }
+                                .foregroundColor(.white.opacity(0.85))
+                                .frame(width: 150, height: 36)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.10, green: 0.10, blue: 0.10)))
+                        }
+                        Button(action: { 
+                            if isFormValid {
+                                showingFinishProfile = true 
+                            }
+                        }) {
+                            HStack { 
+                                Text("continue").font(.custom("JetBrainsMono-Medium", size: 12))
+                                Image(systemName: "arrow.right") 
+                            }
+                            .foregroundColor(isFormValid ? .black : .gray)
+                            .frame(width: 150, height: 36)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(isFormValid ? Color(white: 0.9) : Color(white: 0.5)))
+                        }
+                        .disabled(!isFormValid)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                .background(Color.black) // Ensure background covers the fixed area
+            }
+            .safeAreaInset(edge: .bottom) {
+                // Footer that hides when keyboard is visible
+                if !isKeyboardVisible {
+                    HStack {
+                        AppMarkImage()
+                            .frame(width: 60, height: 55)
+                            .opacity(0.5)
+                        Spacer()
+                        Text("© 2025 Locus Network LLC. All rights reserved.")
+                            .font(.custom("JetBrainsMono-Regular", size: 10))
+                            .foregroundColor(Color(red: 0.77, green: 0.76, blue: 0.76).opacity(0.8))
+                    }
+                    .padding(.horizontal, 26)
+                    .padding(.bottom, 12)
+                    .background(Color.black)
                 }
             }
-            
-            Spacer(minLength: 12)
-            
-            // Footer
-            HStack {
-                AppMarkImage()
-                    .frame(width: 60, height: 55)
-                    .opacity(0.5)
-                Spacer()
-                Text("© 2025 Locus Network LLC. All rights reserved.")
-                    .font(.custom("JetBrainsMono-Regular", size: 10))
-                    .foregroundColor(Color(red: 0.77, green: 0.76, blue: 0.76).opacity(0.8))
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = true
             }
-            .padding(.horizontal, 26)
-            .padding(.bottom, 12)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isKeyboardVisible = false
+            }
         }
     }
     
-    private func labeledField(title: String, text: Binding<String>, width: CGFloat, height: CGFloat = 30, keyboard: UIKeyboardType = .default) -> some View {
+    private func labeledField(title: String, text: Binding<String>, width: CGFloat, height: CGFloat = 30, keyboard: UIKeyboardType = .default, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.custom("JetBrainsMono-Medium", size: 13))
@@ -153,6 +210,7 @@ struct EmailJoinView: View {
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
+                .focused($focusedField, equals: field)
                 .padding(.horizontal, 10)
                 .frame(width: width, height: height, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.95)))
@@ -177,7 +235,7 @@ struct EmailJoinView: View {
         }
     }
     
-    private func labeledSecure(title: String, text: Binding<String>, width: CGFloat, height: CGFloat = 30) -> some View {
+    private func labeledSecure(title: String, text: Binding<String>, width: CGFloat, height: CGFloat = 30, field: Field) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.custom("JetBrainsMono-Medium", size: 13))
@@ -185,6 +243,7 @@ struct EmailJoinView: View {
             SecureField("", text: text)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
+                .focused($focusedField, equals: field)
                 .padding(.horizontal, 10)
                 .frame(width: width, height: height, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.95)))
