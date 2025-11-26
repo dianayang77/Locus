@@ -35,22 +35,9 @@
 		DA7F6E352E80D63700683289 /* LocusUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocusUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DAEC864C2E81067600DB83B7 /* Exceptions for "Locus" folder in "Locus" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = DA7F6E1D2E80D63600683289 /* Locus */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DA7F6E202E80D63700683289 /* Locus */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DAEC864C2E81067600DB83B7 /* Exceptions for "Locus" folder in "Locus" target */,
-			);
 			path = Locus;
 			sourceTree = "<group>";
 		};
